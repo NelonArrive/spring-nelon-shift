@@ -1,14 +1,17 @@
-package nelon.arrive.nelonshift.service;
+package nelon.arrive.nelonshift.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nelon.arrive.nelonshift.dto.ShiftDTO;
-import nelon.arrive.nelonshift.entity.Project;
-import nelon.arrive.nelonshift.entity.Shift;
-import nelon.arrive.nelonshift.exception.*;
-import nelon.arrive.nelonshift.repository.ProjectRepository;
-import nelon.arrive.nelonshift.repository.ShiftRepository;
-import nelon.arrive.nelonshift.service.interfaces.IShiftService;
+import nelon.arrive.nelonshift.entities.Project;
+import nelon.arrive.nelonshift.entities.Shift;
+import nelon.arrive.nelonshift.exceptions.AlreadyExistsException;
+import nelon.arrive.nelonshift.exceptions.BadRequestException;
+import nelon.arrive.nelonshift.exceptions.ResourceNotFoundException;
+import nelon.arrive.nelonshift.exceptions.ValidationException;
+import nelon.arrive.nelonshift.repositories.ProjectRepository;
+import nelon.arrive.nelonshift.repositories.ShiftRepository;
+import nelon.arrive.nelonshift.services.interfaces.IShiftService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

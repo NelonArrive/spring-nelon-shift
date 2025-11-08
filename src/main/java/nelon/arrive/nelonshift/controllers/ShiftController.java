@@ -1,10 +1,10 @@
-package nelon.arrive.nelonshift.controller;
+package nelon.arrive.nelonshift.controllers;
 
 
 import lombok.RequiredArgsConstructor;
 import nelon.arrive.nelonshift.dto.ShiftDTO;
-import nelon.arrive.nelonshift.entity.Shift;
-import nelon.arrive.nelonshift.service.ShiftService;
+import nelon.arrive.nelonshift.entities.Shift;
+import nelon.arrive.nelonshift.services.ShiftService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.entity;
+package nelon.arrive.nelonshift.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;

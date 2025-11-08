@@ -1,6 +1,6 @@
-package nelon.arrive.nelonshift.repository;
+package nelon.arrive.nelonshift.repositories;
 
-import nelon.arrive.nelonshift.entity.Shift;
+import nelon.arrive.nelonshift.entities.Shift;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

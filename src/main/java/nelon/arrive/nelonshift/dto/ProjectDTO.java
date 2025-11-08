@@ -3,7 +3,7 @@ package nelon.arrive.nelonshift.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nelon.arrive.nelonshift.entity.Project;
+import nelon.arrive.nelonshift.entities.Project;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

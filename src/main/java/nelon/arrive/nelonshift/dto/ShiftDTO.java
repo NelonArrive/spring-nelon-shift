@@ -3,7 +3,7 @@ package nelon.arrive.nelonshift.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nelon.arrive.nelonshift.entity.Shift;
+import nelon.arrive.nelonshift.entities.Shift;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

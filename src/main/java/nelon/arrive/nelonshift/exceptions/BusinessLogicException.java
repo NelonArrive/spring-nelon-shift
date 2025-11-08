@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.exception;
+package nelon.arrive.nelonshift.exceptions;
 
 public class BusinessLogicException extends RuntimeException {
 	public BusinessLogicException(String message) {

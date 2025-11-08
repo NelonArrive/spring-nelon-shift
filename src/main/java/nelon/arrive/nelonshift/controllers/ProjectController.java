@@ -1,11 +1,11 @@
-package nelon.arrive.nelonshift.controller;
+package nelon.arrive.nelonshift.controllers;
 
 import lombok.RequiredArgsConstructor;
 import nelon.arrive.nelonshift.dto.PageResponse;
 import nelon.arrive.nelonshift.dto.ProjectDTO;
-import nelon.arrive.nelonshift.entity.Project;
-import nelon.arrive.nelonshift.entity.Project.ProjectStatus;
-import nelon.arrive.nelonshift.service.ProjectService;
+import nelon.arrive.nelonshift.entities.Project;
+import nelon.arrive.nelonshift.entities.Project.ProjectStatus;
+import nelon.arrive.nelonshift.services.ProjectService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

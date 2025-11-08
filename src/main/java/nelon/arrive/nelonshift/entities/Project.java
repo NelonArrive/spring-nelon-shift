@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.entity;
+package nelon.arrive.nelonshift.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +41,13 @@ public class Project {
 	@Column(name = "end_date")
 	private LocalDate endDate;
 	
+	@OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Shift> shifts = new ArrayList<>();
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
+	
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
@@ -49,8 +56,7 @@ public class Project {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 	
-	@OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Shift> shifts = new ArrayList<>();
+	
 	
 	public enum ProjectStatus {
 		ACTIVE,

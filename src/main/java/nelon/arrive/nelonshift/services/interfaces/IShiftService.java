@@ -1,7 +1,7 @@
-package nelon.arrive.nelonshift.service.interfaces;
+package nelon.arrive.nelonshift.services.interfaces;
 
 import nelon.arrive.nelonshift.dto.ShiftDTO;
-import nelon.arrive.nelonshift.entity.Shift;
+import nelon.arrive.nelonshift.entities.Shift;
 
 import java.util.List;
 

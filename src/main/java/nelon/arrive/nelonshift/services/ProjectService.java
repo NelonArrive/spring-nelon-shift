@@ -1,17 +1,17 @@
-package nelon.arrive.nelonshift.service;
+package nelon.arrive.nelonshift.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nelon.arrive.nelonshift.dto.PageResponse;
 import nelon.arrive.nelonshift.dto.ProjectDTO;
-import nelon.arrive.nelonshift.entity.Project;
-import nelon.arrive.nelonshift.entity.Project.ProjectStatus;
-import nelon.arrive.nelonshift.exception.AlreadyExistsException;
-import nelon.arrive.nelonshift.exception.BadRequestException;
-import nelon.arrive.nelonshift.exception.BusinessLogicException;
-import nelon.arrive.nelonshift.exception.ResourceNotFoundException;
-import nelon.arrive.nelonshift.repository.ProjectRepository;
-import nelon.arrive.nelonshift.service.interfaces.IProjectService;
+import nelon.arrive.nelonshift.entities.Project;
+import nelon.arrive.nelonshift.entities.Project.ProjectStatus;
+import nelon.arrive.nelonshift.exceptions.AlreadyExistsException;
+import nelon.arrive.nelonshift.exceptions.BadRequestException;
+import nelon.arrive.nelonshift.exceptions.BusinessLogicException;
+import nelon.arrive.nelonshift.exceptions.ResourceNotFoundException;
+import nelon.arrive.nelonshift.repositories.ProjectRepository;
+import nelon.arrive.nelonshift.services.interfaces.IProjectService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
