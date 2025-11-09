@@ -27,7 +27,7 @@ public class Project {
 	
 	@NotBlank(message = "Project name is required")
 	@Size(min = 2, max = 100, message = "Project name must be between 2 and 100 characters")
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	private String name;
 	
 	@NotNull(message = "Project status is required")
