@@ -2,15 +2,15 @@ package nelon.arrive.nelonshift.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nelon.arrive.nelonshift.dtos.ShiftDTO;
-import nelon.arrive.nelonshift.entities.Project;
-import nelon.arrive.nelonshift.entities.Shift;
-import nelon.arrive.nelonshift.exceptions.AlreadyExistsException;
-import nelon.arrive.nelonshift.exceptions.BadRequestException;
-import nelon.arrive.nelonshift.exceptions.ResourceNotFoundException;
-import nelon.arrive.nelonshift.exceptions.ValidationException;
-import nelon.arrive.nelonshift.repositories.ProjectRepository;
-import nelon.arrive.nelonshift.repositories.ShiftRepository;
+import nelon.arrive.nelonshift.dto.ShiftDto;
+import nelon.arrive.nelonshift.entity.Project;
+import nelon.arrive.nelonshift.entity.Shift;
+import nelon.arrive.nelonshift.exception.AlreadyExistsException;
+import nelon.arrive.nelonshift.exception.BadRequestException;
+import nelon.arrive.nelonshift.exception.ResourceNotFoundException;
+import nelon.arrive.nelonshift.exception.ValidationException;
+import nelon.arrive.nelonshift.repository.ProjectRepository;
+import nelon.arrive.nelonshift.repository.ShiftRepository;
 import nelon.arrive.nelonshift.services.interfaces.IShiftService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ public class ShiftService implements IShiftService {
 	private final ProjectRepository projectRepository;
 	
 	@Transactional(readOnly = true)
-	public List<ShiftDTO> getShiftsByProjectId(Long projectId) {
+	public List<ShiftDto> getShiftsByProjectId(Long projectId) {
 		if (projectId == null || projectId <= 0) {
 			throw new ValidationException("Project ID must be a positive number");
 		}
@@ -46,12 +46,12 @@ public class ShiftService implements IShiftService {
 		}
 		
 		return shifts.stream()
-			.map(ShiftDTO::new)
+			.map(ShiftDto::new)
 			.collect(Collectors.toList());
 	}
 	
 	@Transactional
-	public ShiftDTO createShift(Long projectId, Shift shift) {
+	public ShiftDto createShift(Long projectId, Shift shift) {
 		if (projectId == null || projectId <= 0) {
 			throw new ValidationException("Project ID must be a positive number");
 		}
@@ -75,10 +75,10 @@ public class ShiftService implements IShiftService {
 		Shift savedShift = shiftRepository.save(shift);
 		log.info("Created shift with id: {} for project: {}", savedShift.getId(), projectId);
 		
-		return new ShiftDTO(savedShift);
+		return new ShiftDto(savedShift);
 	}
 	
-	public ShiftDTO updateShift(Long id, Shift shiftDetails) {
+	public ShiftDto updateShift(Long id, Shift shiftDetails) {
 		if (id == null || id <= 0) {
 			throw new ValidationException("Shift ID must be a positive number");
 		}
@@ -112,7 +112,7 @@ public class ShiftService implements IShiftService {
 		Shift updatedShift = shiftRepository.save(shift);
 		log.info("Updated shift with id: {}", id);
 		
-		return new ShiftDTO(updatedShift);
+		return new ShiftDto(updatedShift);
 	}
 	
 	public void deleteShift(Long id) {

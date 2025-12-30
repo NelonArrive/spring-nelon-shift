@@ -1,7 +1,7 @@
-package nelon.arrive.nelonshift.repositories;
+package nelon.arrive.nelonshift.repository;
 
-import nelon.arrive.nelonshift.entities.Project;
-import nelon.arrive.nelonshift.entities.Project.ProjectStatus;
+import nelon.arrive.nelonshift.entity.Project;
+import nelon.arrive.nelonshift.entity.Project.ProjectStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.exceptions;
+package nelon.arrive.nelonshift.exception;
 
 import org.springframework.http.HttpStatus;
 

@@ -2,14 +2,14 @@ package nelon.arrive.nelonshift.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nelon.arrive.nelonshift.dtos.ProjectDTO;
-import nelon.arrive.nelonshift.entities.Project;
-import nelon.arrive.nelonshift.entities.Project.ProjectStatus;
-import nelon.arrive.nelonshift.exceptions.AlreadyExistsException;
-import nelon.arrive.nelonshift.exceptions.BadRequestException;
-import nelon.arrive.nelonshift.exceptions.BusinessLogicException;
-import nelon.arrive.nelonshift.exceptions.ResourceNotFoundException;
-import nelon.arrive.nelonshift.repositories.ProjectRepository;
+import nelon.arrive.nelonshift.dto.ProjectDto;
+import nelon.arrive.nelonshift.entity.Project;
+import nelon.arrive.nelonshift.entity.Project.ProjectStatus;
+import nelon.arrive.nelonshift.exception.AlreadyExistsException;
+import nelon.arrive.nelonshift.exception.BadRequestException;
+import nelon.arrive.nelonshift.exception.BusinessLogicException;
+import nelon.arrive.nelonshift.exception.ResourceNotFoundException;
+import nelon.arrive.nelonshift.repository.ProjectRepository;
 import nelon.arrive.nelonshift.response.PageResponse;
 import nelon.arrive.nelonshift.services.interfaces.IProjectService;
 import org.springframework.data.domain.Page;
@@ -38,7 +38,7 @@ public class ProjectService implements IProjectService {
 	);
 	
 	@Transactional(readOnly = true)
-	public PageResponse<ProjectDTO> getProjects(
+	public PageResponse<ProjectDto> getProjects(
 		String name,
 		ProjectStatus status,
 		LocalDate startDate,
@@ -77,19 +77,19 @@ public class ProjectService implements IProjectService {
 			name, status, startDate, endDate, pageable
 		);
 		
-		Page<ProjectDTO> dtoPage = projectPage.map(ProjectDTO::new);
+		Page<ProjectDto> dtoPage = projectPage.map(ProjectDto::new);
 		return new PageResponse<>(dtoPage);
 	}
 	
 	@Transactional(readOnly = true)
-	public ProjectDTO getProjectById(Long id) {
+	public ProjectDto getProjectById(Long id) {
 		Project project = projectRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
-		return new ProjectDTO(project);
+		return new ProjectDto(project);
 	}
 	
 	@Transactional
-	public ProjectDTO createProject(Project project) {
+	public ProjectDto createProject(Project project) {
 		if (project == null) {
 			throw new BadRequestException("Project data is required");
 		}
@@ -117,11 +117,11 @@ public class ProjectService implements IProjectService {
 		Project savedProject = projectRepository.save(project);
 		log.info("Created project with id: {} and name: '{}'", savedProject.getId(), savedProject.getName());
 		
-		return new ProjectDTO(savedProject);
+		return new ProjectDto(savedProject);
 	}
 	
 	@Transactional
-	public ProjectDTO updateProject(Long id, Project projectDetails) {
+	public ProjectDto updateProject(Long id, Project projectDetails) {
 		validateProjectId(id);
 		
 		if (projectDetails == null) {
@@ -181,7 +181,7 @@ public class ProjectService implements IProjectService {
 			updatedProject.getStatus()
 		);
 		
-		return new ProjectDTO(updatedProject);
+		return new ProjectDto(updatedProject);
 	}
 	
 	@Transactional

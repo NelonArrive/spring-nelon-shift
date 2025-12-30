@@ -1,9 +1,9 @@
-package nelon.arrive.nelonshift.controllers;
+package nelon.arrive.nelonshift.controller;
 
 import lombok.RequiredArgsConstructor;
-import nelon.arrive.nelonshift.dtos.ProjectDTO;
-import nelon.arrive.nelonshift.entities.Project;
-import nelon.arrive.nelonshift.entities.Project.ProjectStatus;
+import nelon.arrive.nelonshift.dto.ProjectDto;
+import nelon.arrive.nelonshift.entity.Project;
+import nelon.arrive.nelonshift.entity.Project.ProjectStatus;
 import nelon.arrive.nelonshift.response.PageResponse;
 import nelon.arrive.nelonshift.services.ProjectService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,7 +20,7 @@ public class ProjectController {
 	private final ProjectService projectService;
 	
 	@GetMapping
-	public ResponseEntity<PageResponse<ProjectDTO>> getProjects(
+	public ResponseEntity<PageResponse<ProjectDto>> getProjects(
 		@RequestParam(required = false) String name,
 		@RequestParam(required = false) ProjectStatus status,
 		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -30,34 +30,34 @@ public class ProjectController {
 		@RequestParam(defaultValue = "id") String sortBy,
 		@RequestParam(defaultValue = "asc") String sortDirection
 	) {
-		PageResponse<ProjectDTO> response = projectService.getProjects(
+		PageResponse<ProjectDto> response = projectService.getProjects(
 			name, status, startDate, endDate, page, size, sortBy, sortDirection
 		);
 		return ResponseEntity.ok(response);
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<ProjectDTO> getProjectById(
+	public ResponseEntity<ProjectDto> getProjectById(
 		@PathVariable Long id
 	) {
-		ProjectDTO project = projectService.getProjectById(id);
+		ProjectDto project = projectService.getProjectById(id);
 		return ResponseEntity.ok(project);
 	}
 	
 	@PostMapping
-	public ResponseEntity<ProjectDTO> createProject(
+	public ResponseEntity<ProjectDto> createProject(
 		@RequestBody Project project
 	) {
-		ProjectDTO createdProject = projectService.createProject(project);
+		ProjectDto createdProject = projectService.createProject(project);
 		return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<ProjectDTO> updateProject(
+	public ResponseEntity<ProjectDto> updateProject(
 		@PathVariable Long id,
 		@RequestBody Project project
 	) {
-		ProjectDTO updatedProject = projectService.updateProject(id, project);
+		ProjectDto updatedProject = projectService.updateProject(id, project);
 		return ResponseEntity.ok(updatedProject);
 	}
 	

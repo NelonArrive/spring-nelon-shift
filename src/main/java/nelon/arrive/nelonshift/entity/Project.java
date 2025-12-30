@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.entities;
+package nelon.arrive.nelonshift.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

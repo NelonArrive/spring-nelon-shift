@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.exceptions;
+package nelon.arrive.nelonshift.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

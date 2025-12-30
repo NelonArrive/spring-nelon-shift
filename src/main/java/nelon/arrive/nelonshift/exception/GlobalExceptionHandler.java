@@ -1,4 +1,4 @@
-package nelon.arrive.nelonshift.exceptions;
+package nelon.arrive.nelonshift.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

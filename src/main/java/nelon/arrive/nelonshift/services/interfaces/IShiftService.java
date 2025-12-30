@@ -1,16 +1,16 @@
 package nelon.arrive.nelonshift.services.interfaces;
 
-import nelon.arrive.nelonshift.dtos.ShiftDTO;
-import nelon.arrive.nelonshift.entities.Shift;
+import nelon.arrive.nelonshift.dto.ShiftDto;
+import nelon.arrive.nelonshift.entity.Shift;
 
 import java.util.List;
 
 public interface IShiftService {
-	public List<ShiftDTO> getShiftsByProjectId(Long projectId);
+	public List<ShiftDto> getShiftsByProjectId(Long projectId);
 	
-	ShiftDTO createShift(Long projectId, Shift shift);
+	ShiftDto createShift(Long projectId, Shift shift);
 	
-	ShiftDTO updateShift(Long id, Shift shiftDetails);
+	ShiftDto updateShift(Long id, Shift shiftDetails);
 	
 	void deleteShift(Long id);
 }
