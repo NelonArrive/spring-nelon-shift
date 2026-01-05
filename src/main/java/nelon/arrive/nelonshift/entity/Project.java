@@ -42,6 +42,9 @@ public class Project {
 	@Column(name = "end_date")
 	private LocalDate endDate;
 	
+	@Column(name = "target_shift_count")
+	private Integer targetShiftCount;
+	
 	@OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Shift> shifts = new ArrayList<>();
 	

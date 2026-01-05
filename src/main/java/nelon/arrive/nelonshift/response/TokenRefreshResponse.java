@@ -4,29 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JwtResponse {
+public class TokenRefreshResponse {
 	private String accessToken;
 	private String refreshToken;
-	private String tokenType = "Bearer";
+	private String tokenType;
 	private Long expiresIn;
 	
-	// User
-	private UUID id;
-	private String email;
-	private String name;
-	
-	public JwtResponse(String accessToken, String refreshToken, Long expiresIn, UUID id, String email, String name) {
+	public TokenRefreshResponse(String accessToken, String refreshToken, Long expiresIn) {
 		this.accessToken = accessToken;
 		this.refreshToken = refreshToken;
 		this.expiresIn = expiresIn;
-		this.id = id;
-		this.email = email;
-		this.name = name;
 	}
 }

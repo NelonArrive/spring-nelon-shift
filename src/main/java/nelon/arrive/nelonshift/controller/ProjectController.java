@@ -2,10 +2,11 @@ package nelon.arrive.nelonshift.controller;
 
 import lombok.RequiredArgsConstructor;
 import nelon.arrive.nelonshift.dto.ProjectDto;
+import nelon.arrive.nelonshift.dto.ProjectStatsDto;
 import nelon.arrive.nelonshift.enums.ProjectStatus;
 import nelon.arrive.nelonshift.request.CreateProjectRequest;
 import nelon.arrive.nelonshift.request.UpdateProjectRequest;
-import nelon.arrive.nelonshift.response.ApiResponse;
+import nelon.arrive.nelonshift.response.MessageResponse;
 import nelon.arrive.nelonshift.response.PageResponse;
 import nelon.arrive.nelonshift.services.interfaces.IProjectService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,14 +18,14 @@ import java.time.LocalDate;
 import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
-@RequestMapping("/${api.prefix}/projects")
+@RequestMapping("${api.prefix}/projects")
 @RequiredArgsConstructor
 public class ProjectController {
 	
 	private final IProjectService projectService;
 	
 	@GetMapping
-	public ResponseEntity<ApiResponse> getProjects(
+	public ResponseEntity<PageResponse<ProjectDto>> getProjects(
 		@RequestParam(required = false) String name,
 		@RequestParam(required = false) ProjectStatus status,
 		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -37,33 +38,35 @@ public class ProjectController {
 		PageResponse<ProjectDto> projectDtos = projectService.getProjects(
 			name, status, startDate, endDate, page, size, sortBy, sortDirection
 		);
-		return ResponseEntity.ok(new ApiResponse("Success", projectDtos));
+		return ResponseEntity.ok(projectDtos);
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<ApiResponse> getProjectById(@PathVariable Long id) {
-		ProjectDto projectDto = projectService.getProjectById(id);
-		return ResponseEntity.ok(new ApiResponse("Success", projectDto));
+	public ResponseEntity<ProjectDto> getProjectById(@PathVariable Long id) {
+		return ResponseEntity.ok(projectService.getProjectById(id));
 	}
 	
 	@PostMapping
-	public ResponseEntity<ApiResponse> createProject(@RequestBody CreateProjectRequest request) {
-		ProjectDto projectDto = projectService.createProject(request);
-		return ResponseEntity.status(CREATED).body(new ApiResponse("Create project successfully", projectDto));
+	public ResponseEntity<ProjectDto> createProject(@RequestBody CreateProjectRequest request) {
+		return ResponseEntity.status(CREATED).body(projectService.createProject(request));
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse> updateProject(
+	public ResponseEntity<ProjectDto> updateProject(
 		@PathVariable Long id,
 		@RequestBody UpdateProjectRequest request
 	) {
-		ProjectDto projectDto = projectService.updateProject(id, request);
-		return ResponseEntity.ok(new ApiResponse("Update project successfully", projectDto));
+		return ResponseEntity.ok(projectService.updateProject(id, request));
 	}
 	
 	@DeleteMapping("/{id}")
-	public ResponseEntity<ApiResponse> deleteProject(@PathVariable Long id){
-		projectService.deleteProject(id);
-		return ResponseEntity.ok(new ApiResponse("Delete project successfully", null));
+	public ResponseEntity<MessageResponse> deleteProject(@PathVariable Long id){
+		return ResponseEntity.ok(projectService.deleteProject(id));
+	}
+	
+	@GetMapping("/{id}/stats")
+	public ResponseEntity<ProjectStatsDto> getProjectStats(@PathVariable Long id) {
+		ProjectStatsDto stats = projectService.getProjectStats(id);
+		return ResponseEntity.ok(stats);
 	}
 }

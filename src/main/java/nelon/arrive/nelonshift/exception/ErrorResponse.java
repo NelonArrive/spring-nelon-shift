@@ -1,28 +1,27 @@
 package nelon.arrive.nelonshift.exception;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
-	
-	private LocalDateTime timestamp;
 	private int status;
-	private String error;
 	private String message;
-	private String path;
-	
+	private LocalDateTime timestamp;
 	private Map<String, String> errors;
 	
-	private String stackTrace;
+	public ErrorResponse(int status, String message, LocalDateTime timestamp) {
+		this.status = status;
+		this.message = message;
+		this.timestamp = timestamp;
+	}
+	
+	public ErrorResponse(int status, String message, LocalDateTime timestamp, Map<String, String> errors) {
+		this.status = status;
+		this.message = message;
+		this.timestamp = timestamp;
+		this.errors = errors;
+	}
 }

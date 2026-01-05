@@ -14,6 +14,7 @@ import nelon.arrive.nelonshift.repository.ProjectRepository;
 import nelon.arrive.nelonshift.repository.ShiftRepository;
 import nelon.arrive.nelonshift.request.CreateShiftRequest;
 import nelon.arrive.nelonshift.request.UpdateShiftRequest;
+import nelon.arrive.nelonshift.response.MessageResponse;
 import nelon.arrive.nelonshift.services.interfaces.IShiftService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,13 +104,15 @@ public class ShiftService implements IShiftService {
 	}
 	
 	@Override
-	public void deleteShift(Long id) {
+	public MessageResponse deleteShift(Long id) {
 		if (!shiftRepository.existsById(id)) {
-			throw new ResourceNotFoundException("Shift not found with id: " + id);
+			throw new ResourceNotFoundException("Shift not found");
 		}
 		
 		shiftRepository.deleteById(id);
 		log.info("Deleted shift with id: {}", id);
+		
+		return new MessageResponse("Delete shift successfully");
 	}
 	
 	@Override

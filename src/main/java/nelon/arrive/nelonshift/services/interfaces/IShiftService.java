@@ -5,6 +5,7 @@ import nelon.arrive.nelonshift.entity.Project;
 import nelon.arrive.nelonshift.entity.Shift;
 import nelon.arrive.nelonshift.request.CreateShiftRequest;
 import nelon.arrive.nelonshift.request.UpdateShiftRequest;
+import nelon.arrive.nelonshift.response.MessageResponse;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -17,7 +18,7 @@ public interface IShiftService {
 	
 	ShiftDto updateShift(Long id, UpdateShiftRequest shiftDetails);
 	
-	void deleteShift(Long id);
+	MessageResponse deleteShift(Long id);
 	
 	void validateShiftCreate(CreateShiftRequest request);
 	

@@ -3,7 +3,9 @@ package nelon.arrive.nelonshift.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nelon.arrive.nelonshift.dto.ProjectDto;
+import nelon.arrive.nelonshift.dto.ProjectStatsDto;
 import nelon.arrive.nelonshift.entity.Project;
+import nelon.arrive.nelonshift.entity.Shift;
 import nelon.arrive.nelonshift.entity.User;
 import nelon.arrive.nelonshift.enums.ProjectStatus;
 import nelon.arrive.nelonshift.exception.BadRequestException;
@@ -13,9 +15,9 @@ import nelon.arrive.nelonshift.mappers.ProjectMapper;
 import nelon.arrive.nelonshift.repository.ProjectRepository;
 import nelon.arrive.nelonshift.request.CreateProjectRequest;
 import nelon.arrive.nelonshift.request.UpdateProjectRequest;
+import nelon.arrive.nelonshift.response.MessageResponse;
 import nelon.arrive.nelonshift.response.PageResponse;
 import nelon.arrive.nelonshift.services.interfaces.IProjectService;
-import nelon.arrive.nelonshift.services.interfaces.IUserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +25,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +40,13 @@ import java.util.List;
 public class ProjectService implements IProjectService {
 	
 	private final ProjectRepository projectRepository;
-	private final IUserService userService;
 	private final ProjectMapper projectMapper;
 	
 	private static final int MAX_NAME_LENGTH = 100;
 	private static final List<String> VALID_SORT_FIELDS = Arrays.asList(
 		"id", "name", "status", "startDate", "endDate", "createdAt", "updatedAt"
 	);
+	private final AuthService authService;
 	
 	@Override
 	@Transactional(readOnly = true)
@@ -99,7 +106,7 @@ public class ProjectService implements IProjectService {
 			throw new BusinessLogicException("Cannot create a project with COMPLETED status");
 		}
 		
-		User user = userService.getAuthenticatedUser();
+		User user = authService.getCurrentUser();
 		
 		validateProjectDates(request.getStartDate(), request.getEndDate());
 		
@@ -147,7 +154,7 @@ public class ProjectService implements IProjectService {
 		return projectMapper.toDto(updatedProject);
 	}
 	
-	public void deleteProject(Long id) {
+	public MessageResponse deleteProject(Long id) {
 		Project project = projectRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 		
@@ -157,6 +164,111 @@ public class ProjectService implements IProjectService {
 		
 		projectRepository.deleteById(id);
 		log.info("Deleted project with id: {}", id);
+		
+		return new MessageResponse("Delete project successfully");
+	}
+	
+	@Transactional(readOnly = true)
+	public ProjectStatsDto getProjectStats(Long id) {
+		Project project = projectRepository.findById(id)
+			.orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+		
+		if (project.getShifts().isEmpty()) {
+			String period = project.getStartDate() != null && project.getEndDate() != null
+				? formatDateRange(project.getStartDate(), project.getEndDate())
+				: "—";
+			
+			ProjectStatsDto emptyStats = ProjectStatsDto.empty(period);
+			emptyStats.setTargetShiftCount(project.getTargetShiftCount());
+			emptyStats.calculateDerivedValues();
+			return emptyStats;
+		}
+		
+		List<Shift> shifts = project.getShifts();
+		
+		BigDecimal totalBasePay = shifts.stream()
+			.map(Shift::getBasePay)
+			.filter(Objects::nonNull)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		BigDecimal totalOvertimePay = shifts.stream()
+			.map(Shift::getOvertimePay)
+			.filter(Objects::nonNull)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		BigDecimal totalPerDiem = shifts.stream()
+			.map(Shift::getPerDiem)
+			.filter(Objects::nonNull)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		BigDecimal totalEarnings = totalBasePay.add(totalOvertimePay).add(totalPerDiem);
+		
+		Integer totalHours = shifts.stream()
+			.map(Shift::getHours)
+			.filter(Objects::nonNull)
+			.reduce(0, Integer::sum);
+		
+		// ===== ПЕРИОД РАБОТЫ =====
+		
+		LocalDate firstShiftDate = shifts.stream()
+			.map(Shift::getDate)
+			.min(LocalDate::compareTo)
+			.orElse(null);
+		
+		LocalDate lastShiftDate = shifts.stream()
+			.map(Shift::getDate)
+			.max(LocalDate::compareTo)
+			.orElse(null);
+		
+		String period = formatDateRange(firstShiftDate, lastShiftDate);
+		
+		// Количество дней между первой и последней сменой
+		Integer daysWorked = (int) ChronoUnit.DAYS.between(firstShiftDate, lastShiftDate) + 1;
+		
+		// ===== СОБИРАЕМ DTO =====
+		
+		ProjectStatsDto stats = ProjectStatsDto.builder()
+			.period(period)
+			.daysWorked(daysWorked)
+			.shiftCount(shifts.size())
+			.totalHours(totalHours)
+			.totalEarnings(totalEarnings)
+			.totalBasePay(totalBasePay)
+			.totalOvertimePay(totalOvertimePay)
+			.totalPerDiem(totalPerDiem)
+			.targetShiftCount(project.getTargetShiftCount())
+			.build();
+		
+		// Считаем проценты, ставку, прогресс
+		stats.calculateDerivedValues();
+		
+		log.info("Calculated stats for project {}: {} shifts, {} total, {}₽/hour",
+			id, stats.getShiftCount(), stats.getTotalEarnings(), stats.getHourlyRate());
+		
+		return stats;
+	}
+	
+	/**
+	 * Форматирование диапазона дат
+	 * Формат: "5 января - 25 января 2025"
+	 * <p>
+	 * Если год одинаковый - не дублируем:
+	 * "5 января - 25 января 2025"
+	 * <p>
+	 * Если года разные:
+	 * "28 декабря 2024 - 5 января 2025"
+	 */
+	private String formatDateRange(LocalDate from, LocalDate to) {
+		DateTimeFormatter dayMonth = DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru-RU"));
+		DateTimeFormatter dayMonthYear = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("ru-RU"));
+		
+		if (from.getYear() == to.getYear()) {
+			// Один год: "5 января - 25 января 2025"
+			return from.format(dayMonth) + " - " + to.format(dayMonthYear);
+		} else {
+			// Разные года: "28 декабря 2024 - 5 января 2025"
+			return from.format(dayMonthYear) + " - " + to.format(dayMonthYear);
+		}
 	}
 	
 	// ===== ПРИВАТНЫЕ МЕТОДЫ ВАЛИДАЦИИ =====

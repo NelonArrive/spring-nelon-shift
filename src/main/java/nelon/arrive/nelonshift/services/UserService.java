@@ -8,6 +8,7 @@ import nelon.arrive.nelonshift.exception.ResourceNotFoundException;
 import nelon.arrive.nelonshift.mappers.UserMapper;
 import nelon.arrive.nelonshift.repository.UserRepository;
 import nelon.arrive.nelonshift.request.UpdateUserRequest;
+import nelon.arrive.nelonshift.response.MessageResponse;
 import nelon.arrive.nelonshift.services.interfaces.IUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,25 +50,11 @@ public class UserService implements IUserService {
 	}
 	
 	@Override
-	public void deleteUser(UUID userId) {
+	public MessageResponse deleteUser(UUID userId) {
 		userRepository.findById(userId).ifPresentOrElse(userRepository::delete, () -> {
 			throw new ResourceNotFoundException("User not found!");
 		});
-	}
-	
-	@Override
-	public User getAuthenticatedUser() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		if (authentication == null ||
-			!authentication.isAuthenticated() ||
-			authentication.getPrincipal().equals("anonymousUser")) {
-			throw new JwtException("User is not authenticated");
-		}
-		
-		String email = authentication.getName();
-		
-		return userRepository.findByEmail(email)
-			.orElseThrow(() -> new ResourceNotFoundException("User not found"));
+		return new MessageResponse("Delete user successfully");
 	}
 }
