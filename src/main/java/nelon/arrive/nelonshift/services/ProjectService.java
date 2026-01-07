@@ -169,6 +169,7 @@ public class ProjectService implements IProjectService {
 	}
 	
 	@Transactional(readOnly = true)
+	@Override
 	public ProjectStatsDto getProjectStats(Long id) {
 		Project project = projectRepository.findById(id)
 			.orElseThrow(() -> new ResourceNotFoundException("Project not found"));
@@ -208,8 +209,6 @@ public class ProjectService implements IProjectService {
 			.filter(Objects::nonNull)
 			.reduce(0, Integer::sum);
 		
-		// ===== ПЕРИОД РАБОТЫ =====
-		
 		LocalDate firstShiftDate = shifts.stream()
 			.map(Shift::getDate)
 			.min(LocalDate::compareTo)
@@ -222,10 +221,7 @@ public class ProjectService implements IProjectService {
 		
 		String period = formatDateRange(firstShiftDate, lastShiftDate);
 		
-		// Количество дней между первой и последней сменой
 		Integer daysWorked = (int) ChronoUnit.DAYS.between(firstShiftDate, lastShiftDate) + 1;
-		
-		// ===== СОБИРАЕМ DTO =====
 		
 		ProjectStatsDto stats = ProjectStatsDto.builder()
 			.period(period)
