@@ -24,9 +24,5 @@ public class DashboardStatsDto {
 	private Integer currentMonthShifts;
 	private Integer currentMonthHours;
 	
-	private Integer earningsChangePercentage;
-	
 	private List<TopProjectDto> topProjects;
-	
-	private List<DailyEarningsDto> dailyEarnings;
 }

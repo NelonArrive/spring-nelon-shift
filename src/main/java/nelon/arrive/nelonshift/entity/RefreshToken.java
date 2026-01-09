@@ -19,21 +19,14 @@ import java.util.UUID;
 @Builder
 public class RefreshToken {
 	@Id
-	private String id;
+	private String token;
 	
 	@Indexed
 	private UUID userId;
-	
-	private String token;
-	
-	private Instant createdAt;
 	
 	private Instant expireAt;
 	
 	@TimeToLive
 	private Long ttl;
 	
-	public boolean isExpired() {
-		return Instant.now().isAfter(expireAt);
-	}
 }

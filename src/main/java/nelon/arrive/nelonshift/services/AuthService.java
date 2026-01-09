@@ -1,23 +1,24 @@
 package nelon.arrive.nelonshift.services;
 
 import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nelon.arrive.nelonshift.entity.RefreshToken;
 import nelon.arrive.nelonshift.entity.User;
 import nelon.arrive.nelonshift.exception.AlreadyExistsException;
 import nelon.arrive.nelonshift.exception.ResourceNotFoundException;
+import nelon.arrive.nelonshift.exception.TokenRefreshException;
 import nelon.arrive.nelonshift.repository.UserRepository;
 import nelon.arrive.nelonshift.request.LoginRequest;
 import nelon.arrive.nelonshift.request.SignupRequest;
-import nelon.arrive.nelonshift.request.TokenRefreshRequest;
-import nelon.arrive.nelonshift.response.JwtResponse;
+import nelon.arrive.nelonshift.response.AuthResponse;
 import nelon.arrive.nelonshift.response.MessageResponse;
-import nelon.arrive.nelonshift.response.TokenRefreshResponse;
 import nelon.arrive.nelonshift.security.jwt.JwtUtils;
 import nelon.arrive.nelonshift.security.user.CustomUserDetails;
+import nelon.arrive.nelonshift.security.utils.CookieUtil;
 import nelon.arrive.nelonshift.services.interfaces.IAuthService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -36,24 +37,21 @@ public class AuthService implements IAuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtils jwtUtils;
 	private final RefreshTokenService refreshTokenService;
-	
-	@Value("${jwt.access-token-expiration}")
-	private long accessTokenExpirationMs;
+	private final CookieUtil cookieUtil;
 	
 	/**
 	 * POST /api/auth/login - Вход в систему
 	 * Процесс:
 	 * 1. Проверяем email и пароль
 	 * 2. Генерируем Access Token (15 минут)
-	 * 3. Генерируем Refresh Token (30 дней) и сохраняем в Redis
-	 * 4. Возвращаем оба токена
-
-	 * Клиент должен:
-	 * - Хранить Access Token в памяти (не в localStorage!)
-	 * - Хранить Refresh Token в httpOnly cookie (или secure storage)
+	 * 3. Генерируем Refresh Token (30 дней)
+	 * 4. Записываем оба токена в HTTP-only cookies
+	 * 5. Возвращаем только информацию о пользователе (БЕЗ токенов!)
+	 * <p>
+	 * Токены автоматически отправляются браузером в каждом запросе
 	 */
 	@Override
-	public JwtResponse login(LoginRequest loginRequest) {
+	public AuthResponse login(LoginRequest loginRequest, HttpServletResponse response) {
 		log.info("Login attempt for email: {}", loginRequest.getEmail());
 		
 		Authentication authentication = authenticationManager.authenticate(
@@ -70,12 +68,12 @@ public class AuthService implements IAuthService {
 		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 		String refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 		
+		cookieUtil.setAccessTokenCookie(response, accessToken);
+		cookieUtil.setRefreshTokenCookie(response, refreshToken);
+		
 		log.info("Login successful for user: {}", userDetails.getEmail());
 		
-		return new JwtResponse(
-			accessToken,
-			refreshToken,
-			accessTokenExpirationMs / 1000,
+		return new AuthResponse(
 			userDetails.getId(),
 			userDetails.getEmail(),
 			userDetails.getName()
@@ -85,25 +83,27 @@ public class AuthService implements IAuthService {
 	/**
 	 * POST /api/auth/refresh - Обновление Access Token
 	 * Процесс (Token Rotation):
-	 * 1. Проверяем Refresh Token в Redis
-	 * 2. Генерируем новый Access Token
-	 * 3. Генерируем новый Refresh Token (Token Rotation!)
-	 * 4. Удаляем старый Refresh Token из Redis
-	 * 5. Возвращаем оба новых токена
+	 * 1. Читаем Refresh Token из cookie (автоматически)
+	 * 2. Проверяем токен в Redis
+	 * 3. Генерируем новый Access Token
+	 * 4. Генерируем новый Refresh Token (Token Rotation!)
+	 * 5. Обновляем оба токена в cookies
 	 */
 	@PostMapping("/refresh")
 	@Override
-	public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
-		String requestRefreshToken = request.getRefreshToken();
-		
+	public MessageResponse refreshToken(HttpServletRequest request, HttpServletResponse response) {
 		log.info("Token refresh request");
 		
-		// 1. Проверяем и получаем информацию о токене из Redis
-		RefreshToken refreshToken = refreshTokenService.verifyExpiration(requestRefreshToken);
+		// 1. Читаем Refresh Token из cookie
+		String refreshToken = cookieUtil.getRefreshTokenFromCookie(request)
+			.orElseThrow(() -> new TokenRefreshException("Refresh token not found in cookies"));
 		
-		// 2. Загружаем пользователя
-		User user = userRepository.findById(refreshToken.getUserId())
-			.orElseThrow(() -> new ResourceNotFoundException("User not found"));
+		// 2. Проверяем и получаем информацию о токене из Redis
+		RefreshToken refreshTokenEntity = refreshTokenService.verifyExpiration(refreshToken);
+		
+		// 3. Загружаем пользователя
+		User user = userRepository.findById(refreshTokenEntity.getUserId())
+			.orElseThrow(() -> new RuntimeException("User not found"));
 		
 		// 4. Генерируем новый Access Token
 		String newAccessToken = jwtUtils.generateAccessToken(
@@ -113,20 +113,17 @@ public class AuthService implements IAuthService {
 		);
 		
 		// 5. Token Rotation - создаём новый Refresh Token, удаляем старый
-		String newRefreshToken = refreshTokenService.rotateRefreshToken(requestRefreshToken);
+		String newRefreshToken = refreshTokenService.rotateRefreshToken(refreshToken);
+		
+		// 7. Обновляем оба токена в cookies
+		cookieUtil.setAccessTokenCookie(response, newAccessToken);
+		cookieUtil.setRefreshTokenCookie(response, newRefreshToken);
 		
 		log.info("Token refresh successful for user: {}", user.getEmail());
 		
-		return new TokenRefreshResponse(
-			newAccessToken,
-			newRefreshToken,
-			accessTokenExpirationMs / 1000
-		);
+		return new MessageResponse("Token refreshed successfully");
 	}
 	
-	/**
-	 * POST /api/auth/signup - Регистрация нового пользователя
-	 */
 	@Override
 	public MessageResponse signup(SignupRequest request) {
 		if (userRepository.existsByEmail(request.getEmail())) {
@@ -147,25 +144,40 @@ public class AuthService implements IAuthService {
 	}
 	
 	/**
-	 * POST /api/auth/logout - Выход (удаление Refresh Token)
-	 * Удаляет текущий Refresh Token из Redis
-	 * Access Token всё ещё будет работать до истечения срока действия (15 минут)
+	 * POST /api/auth/logout - Выход (удаление токенов)
+	 * 1. Читаем Refresh Token из cookie
+	 * 2. Удаляем Refresh Token из Redis
+	 * 3. Удаляем оба токена из cookies
+	 * Access Token всё ещё будет работать до истечения (макс 15 минут)
 	 */
 	@Override
-	public MessageResponse logout(TokenRefreshRequest request) {
-		String refreshToken = request.getRefreshToken();
+	public MessageResponse logout(
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		// Читаем Refresh Token из cookie (если есть)
+		cookieUtil.getRefreshTokenFromCookie(request).ifPresent(refreshTokenService::deleteByToken);
 		
-		refreshTokenService.deleteByToken(refreshToken);
+		// Удаляем оба токена из cookies
+		cookieUtil.deleteAllTokenCookies(response);
 		
-		log.info("Logout successful, refresh token deleted");
+		log.info("Logout successful");
 		
 		return new MessageResponse("Logged out successfully");
 	}
 	
-	/**
-	 * GET /api/auth/me - Получить информацию о текущем пользователе
-	 * Требует Access Token в заголовке Authorization
-	 */
+//	public MessageResponse logout(TokenRefreshRequest request) {
+//		String refreshToken = request.getRefreshToken();
+//
+//		refreshTokenService.deleteByToken(refreshToken);
+//
+//		log.info("Logout successful, refresh token deleted");
+//
+		
+		/**
+		 * GET /api/auth/me - Получить информацию о текущем пользователе
+		 * Требует Access Token в cookie (автоматически отправляется)
+		 */
 	@Override
 	public User getCurrentUser() {
 		Authentication authentication =
@@ -183,6 +195,5 @@ public class AuthService implements IAuthService {
 		return userRepository.findById(userDetails.getId())
 			.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 	}
-	
 }
 

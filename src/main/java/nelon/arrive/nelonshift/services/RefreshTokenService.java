@@ -7,10 +7,8 @@ import nelon.arrive.nelonshift.exception.TokenRefreshException;
 import nelon.arrive.nelonshift.repository.RefreshTokenRepository;
 import nelon.arrive.nelonshift.security.jwt.JwtUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,10 +26,8 @@ public class RefreshTokenService {
 		Instant expiresAt = Instant.now().plusMillis(expirationMs);
 		
 		RefreshToken refreshToken = RefreshToken.builder()
-			.id(UUID.randomUUID().toString())
 			.userId(userId)
 			.token(tokenValue)
-			.createdAt(Instant.now())
 			.ttl(expirationMs / 1000)
 			.build();
 		
@@ -42,37 +38,18 @@ public class RefreshTokenService {
 		return tokenValue;
 	}
 	
-	public RefreshToken findByToken(String token) {
-		return refreshTokenRepository.findByToken(token)
-			.orElseThrow(() -> new TokenRefreshException("Refresh token not found or expired"));
-	}
-	
 	public RefreshToken verifyExpiration(String token) {
-		RefreshToken refreshToken = findByToken(token);
-		
-		if (refreshToken.isExpired()) {
-			refreshTokenRepository.delete(refreshToken);
-			
-			log.warn("Refresh token expired: {}", token);
-			throw new TokenRefreshException("Refresh token was expired. Please login again.");
-		}
-		
-		return refreshToken;
+		return refreshTokenRepository.findById(token)
+			.orElseThrow(() ->
+				new TokenRefreshException("Refresh token not found or expired"));
 	}
 	
-	@Transactional
 	public String rotateRefreshToken(String oldToken) {
 		RefreshToken oldRefreshToken = verifyExpiration(oldToken);
 		
-		UUID userId = oldRefreshToken.getUserId();
-		
 		refreshTokenRepository.delete(oldRefreshToken);
-		log.info("Deleted old refresh token for user: {}", userId);
 		
-		String newToken = createRefreshToken(userId);
-		log.info("Created new refresh token for user: {} (rotation)", userId);
-		
-		return newToken;
+		return createRefreshToken(oldRefreshToken.getUserId());
 	}
 	
 	public void deleteByToken(String token) {
@@ -81,12 +58,5 @@ public class RefreshTokenService {
 				refreshTokenRepository.delete(refreshToken);
 				log.info("Deleted refresh token for user: {}", refreshToken.getUserId());
 			});
-	}
-	
-	public void deleteAllUserTokens(UUID userId) {
-		List<RefreshToken> tokens = refreshTokenRepository.findByUserId(userId);
-		refreshTokenRepository.deleteAll(tokens);
-		
-		log.info("Deleted all refresh tokens for user: {} (count: {})", userId, tokens.size());
 	}
 }

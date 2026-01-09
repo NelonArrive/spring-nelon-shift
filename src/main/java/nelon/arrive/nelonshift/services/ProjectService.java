@@ -43,9 +43,7 @@ public class ProjectService implements IProjectService {
 	private final ProjectMapper projectMapper;
 	
 	private static final int MAX_NAME_LENGTH = 100;
-	private static final List<String> VALID_SORT_FIELDS = Arrays.asList(
-		"id", "name", "status", "startDate", "endDate", "createdAt", "updatedAt"
-	);
+	private static final List<String> VALID_SORT_FIELDS = Arrays.asList("name", "status", "createdAt");
 	private final AuthService authService;
 	
 	@Override
@@ -53,39 +51,33 @@ public class ProjectService implements IProjectService {
 	public PageResponse<ProjectDto> getProjects(
 		String name,
 		ProjectStatus status,
-		LocalDate startDate,
-		LocalDate endDate,
 		int page,
 		int size,
 		String sortBy,
 		String sortDirection
 	) {
-		validateSorting(sortBy, sortDirection);
+		String dbSortField = mapSortField(sortBy);
+		
+		if (!VALID_SORT_FIELDS.contains(dbSortField)) {
+			throw new BadRequestException("Invalid sort field: " + sortBy);
+		}
+		
+		if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
+			throw new BadRequestException("Sort direction must be 'asc' or 'desc'");
+		}
 		
 		if (name != null && name.trim().length() > MAX_NAME_LENGTH) {
 			throw new BadRequestException("Search name is too long (max " + MAX_NAME_LENGTH + " characters)");
 		}
 		
-		if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
-			throw new BadRequestException("Start date cannot be after end date");
-		}
-		
-		if (startDate != null && startDate.isBefore(LocalDate.now().minusYears(10))) {
-			throw new BadRequestException("Start date cannot be more than 10 years in the past");
-		}
-		
-		if (endDate != null && endDate.isAfter(LocalDate.now().plusYears(10))) {
-			throw new BadRequestException("End date cannot be more than 10 years in the future");
-		}
-		
 		Sort sort = sortDirection.equalsIgnoreCase("desc")
-			? Sort.by(sortBy).descending()
-			: Sort.by(sortBy).ascending();
+			? Sort.by(dbSortField).descending()
+			: Sort.by(dbSortField).ascending();
 		
 		Pageable pageable = PageRequest.of(page, size, sort);
 		
 		Page<Project> projectPage = projectRepository.findByFilters(
-			name, status, startDate, endDate, pageable
+			name, status, pageable
 		);
 		
 		Page<ProjectDto> projectDtoPage = projectPage.map(projectMapper::toDto);
@@ -235,7 +227,6 @@ public class ProjectService implements IProjectService {
 			.targetShiftCount(project.getTargetShiftCount())
 			.build();
 		
-		// Считаем проценты, ставку, прогресс
 		stats.calculateDerivedValues();
 		
 		log.info("Calculated stats for project {}: {} shifts, {} total, {}₽/hour",
@@ -244,16 +235,6 @@ public class ProjectService implements IProjectService {
 		return stats;
 	}
 	
-	/**
-	 * Форматирование диапазона дат
-	 * Формат: "5 января - 25 января 2025"
-	 * <p>
-	 * Если год одинаковый - не дублируем:
-	 * "5 января - 25 января 2025"
-	 * <p>
-	 * Если года разные:
-	 * "28 декабря 2024 - 5 января 2025"
-	 */
 	private String formatDateRange(LocalDate from, LocalDate to) {
 		DateTimeFormatter dayMonth = DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru-RU"));
 		DateTimeFormatter dayMonthYear = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("ru-RU"));
@@ -265,6 +246,14 @@ public class ProjectService implements IProjectService {
 			// Разные года: "28 декабря 2024 - 5 января 2025"
 			return from.format(dayMonthYear) + " - " + to.format(dayMonthYear);
 		}
+	}
+	
+	private String mapSortField(String frontendSortBy) {
+		return switch (frontendSortBy.toLowerCase()) {
+			case "name" -> "name";
+			case "status" -> "status";
+			default -> "createdAt";
+		};
 	}
 	
 	// ===== ПРИВАТНЫЕ МЕТОДЫ ВАЛИДАЦИИ =====
@@ -286,25 +275,6 @@ public class ProjectService implements IProjectService {
 		
 		if (endDate != null && endDate.isAfter(LocalDate.now().plusYears(10))) {
 			throw new BadRequestException("End date cannot be more than 10 years in the future");
-		}
-	}
-	
-	private void validateSorting(String sortBy, String sortDirection) {
-		if (sortBy == null || sortBy.trim().isEmpty()) {
-			throw new BadRequestException("Sort field cannot be empty");
-		}
-		
-		if (!VALID_SORT_FIELDS.contains(sortBy)) {
-			throw new BadRequestException("Invalid sort field: " + sortBy +
-				". Valid fields: " + String.join(", ", VALID_SORT_FIELDS));
-		}
-		
-		if (sortDirection == null || sortDirection.trim().isEmpty()) {
-			throw new BadRequestException("Sort direction cannot be empty");
-		}
-		
-		if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
-			throw new BadRequestException("Sort direction must be 'asc' or 'desc'");
 		}
 	}
 	

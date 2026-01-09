@@ -1,7 +1,6 @@
 package nelon.arrive.nelonshift.services.interfaces;
 
 import nelon.arrive.nelonshift.dto.UserDto;
-import nelon.arrive.nelonshift.entity.User;
 import nelon.arrive.nelonshift.request.UpdateUserRequest;
 import nelon.arrive.nelonshift.response.MessageResponse;
 

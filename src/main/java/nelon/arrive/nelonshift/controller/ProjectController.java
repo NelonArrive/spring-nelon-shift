@@ -9,11 +9,8 @@ import nelon.arrive.nelonshift.request.UpdateProjectRequest;
 import nelon.arrive.nelonshift.response.MessageResponse;
 import nelon.arrive.nelonshift.response.PageResponse;
 import nelon.arrive.nelonshift.services.interfaces.IProjectService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
@@ -28,15 +25,13 @@ public class ProjectController {
 	public ResponseEntity<PageResponse<ProjectDto>> getProjects(
 		@RequestParam(required = false) String name,
 		@RequestParam(required = false) ProjectStatus status,
-		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
-		@RequestParam(defaultValue = "id") String sortBy,
-		@RequestParam(defaultValue = "asc") String sortDirection
+		@RequestParam(defaultValue = "date") String sortBy,
+		@RequestParam(defaultValue = "desc") String sortDirection
 	) {
 		PageResponse<ProjectDto> projectDtos = projectService.getProjects(
-			name, status, startDate, endDate, page, size, sortBy, sortDirection
+			name, status, page, size, sortBy, sortDirection
 		);
 		return ResponseEntity.ok(projectDtos);
 	}

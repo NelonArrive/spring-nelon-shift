@@ -30,11 +30,7 @@ public class SecurityConfig {
 	private final JwtAuthEntryPoint authEntryPoint;
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-	
-	@Bean
-	public AuthTokenFilter authTokenFilter() {
-		return new AuthTokenFilter();
-	}
+	private final AuthTokenFilter authTokenFilter;
 	
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -43,7 +39,9 @@ public class SecurityConfig {
 	
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf(AbstractHttpConfigurer::disable)
+		http
+			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+			.csrf(AbstractHttpConfigurer::disable)
 			.exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
@@ -63,7 +61,7 @@ public class SecurityConfig {
 				.successHandler(oAuth2AuthenticationSuccessHandler)
 			);
 		
-		http.addFilterBefore(authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 		
 		return http.build();
 	}
@@ -71,13 +69,14 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173")); // React/Vue
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
 		
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
+		
 		return source;
 	}
 }

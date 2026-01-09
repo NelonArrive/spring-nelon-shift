@@ -1,14 +1,15 @@
 package nelon.arrive.nelonshift.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nelon.arrive.nelonshift.entity.User;
+import nelon.arrive.nelonshift.dto.UserDto;
+import nelon.arrive.nelonshift.mappers.UserMapper;
 import nelon.arrive.nelonshift.request.LoginRequest;
 import nelon.arrive.nelonshift.request.SignupRequest;
-import nelon.arrive.nelonshift.request.TokenRefreshRequest;
-import nelon.arrive.nelonshift.response.JwtResponse;
+import nelon.arrive.nelonshift.response.AuthResponse;
 import nelon.arrive.nelonshift.response.MessageResponse;
-import nelon.arrive.nelonshift.response.TokenRefreshResponse;
 import nelon.arrive.nelonshift.services.interfaces.IAuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +20,15 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 	
 	private final IAuthService authService;
+	private final UserMapper userMapper;
 	
 	@PostMapping("/login")
-	public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-		JwtResponse jwtResponse = authService.login(loginRequest);
-		return ResponseEntity.ok(jwtResponse);
+	public ResponseEntity<AuthResponse> login(
+		@Valid @RequestBody LoginRequest loginRequest,
+		HttpServletResponse response
+	) {
+		AuthResponse authResponse = authService.login(loginRequest, response);
+		return ResponseEntity.ok(authResponse);
 	}
 	
 	@PostMapping("/signup")
@@ -32,28 +37,24 @@ public class AuthController {
 	}
 	
 	@PostMapping("/refresh")
-	public ResponseEntity<TokenRefreshResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
-		return ResponseEntity.ok(authService.refreshToken(request));
+	public ResponseEntity<MessageResponse> refresh(
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		return ResponseEntity.ok(authService.refreshToken(request, response));
 	}
 	
 	@PostMapping("/logout")
-	public ResponseEntity<MessageResponse> logout(@Valid @RequestBody TokenRefreshRequest request) {
-		return ResponseEntity.ok(authService.logout(request));
+	public ResponseEntity<MessageResponse> logout(
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		return ResponseEntity.ok(authService.logout(request, response));
 	}
 	
 	@GetMapping("/me")
-	public ResponseEntity<JwtResponse> currentUser() {
-		User user = authService.getCurrentUser();
-		
-		JwtResponse jwtResponse = new JwtResponse(
-			null,
-			null,
-			null,
-			user.getId(),
-			user.getEmail(),
-			user.getName()
-		);
-		
-		return ResponseEntity.ok(jwtResponse);
+	public ResponseEntity<UserDto> currentUser() {
+		UserDto userDto = userMapper.toDto(authService.getCurrentUser());
+		return ResponseEntity.ok(userDto);
 	}
 }

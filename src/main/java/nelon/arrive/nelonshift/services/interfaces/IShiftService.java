@@ -2,7 +2,6 @@ package nelon.arrive.nelonshift.services.interfaces;
 
 import nelon.arrive.nelonshift.dto.ShiftDto;
 import nelon.arrive.nelonshift.entity.Project;
-import nelon.arrive.nelonshift.entity.Shift;
 import nelon.arrive.nelonshift.request.CreateShiftRequest;
 import nelon.arrive.nelonshift.request.UpdateShiftRequest;
 import nelon.arrive.nelonshift.response.MessageResponse;

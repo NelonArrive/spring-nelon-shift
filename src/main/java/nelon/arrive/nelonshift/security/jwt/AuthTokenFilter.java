@@ -1,6 +1,5 @@
 package nelon.arrive.nelonshift.security.jwt;
 
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,7 +8,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nelon.arrive.nelonshift.security.user.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
+import nelon.arrive.nelonshift.security.utils.CookieUtil;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,11 +24,9 @@ import java.io.IOException;
 @Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
 	
-	@Autowired
-	private JwtUtils jwtUtils;
-	
-	@Autowired
-	private CustomUserDetailsService userDetailsService;
+	private final JwtUtils jwtUtils;
+	private final CustomUserDetailsService userDetailsService;
+	private final CookieUtil cookieUtil;
 	
 	@Override
 	protected void doFilterInternal(
@@ -39,7 +36,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 		
 		try {
-			String jwt = parseJwt(request);
+			String jwt = cookieUtil.getAccessTokenFromCookie(request).orElse(null);
+			
+			if (jwt == null) {
+				jwt = parseJwtFromHeader(request);
+			}
 			
 			if (jwt != null && jwtUtils.validateAccessToken(jwt)) {
 				String email = jwtUtils.getEmailFromJwtToken(jwt);
@@ -57,22 +58,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 				
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
-		} catch (JwtException e) {
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.getWriter().write(e.getMessage() + " : Invalid or expired token");
-			log.error("Invalid or expired token: {}", e.getMessage());
-			return;
 		} catch (Exception e) {
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			response.getWriter().write(e.getMessage());
 			log.error("Cannot set user authentication: {}", e.getMessage());
-			return;
 		}
 		
 		filterChain.doFilter(request, response);
 	}
 	
-	private String parseJwt(HttpServletRequest request) {
+	private String parseJwtFromHeader(HttpServletRequest request) {
 		String headerAuth = request.getHeader("Authorization");
 		
 		if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {

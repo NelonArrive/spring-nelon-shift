@@ -14,8 +14,6 @@ public interface IProjectService {
 	PageResponse<ProjectDto> getProjects(
 		String name,
 		ProjectStatus status,
-		LocalDate startDate,
-		LocalDate endDate,
 		int page,
 		int size,
 		String sortBy,

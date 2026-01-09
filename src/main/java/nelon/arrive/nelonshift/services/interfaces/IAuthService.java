@@ -1,21 +1,25 @@
 package nelon.arrive.nelonshift.services.interfaces;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import nelon.arrive.nelonshift.entity.User;
 import nelon.arrive.nelonshift.request.LoginRequest;
 import nelon.arrive.nelonshift.request.SignupRequest;
-import nelon.arrive.nelonshift.request.TokenRefreshRequest;
-import nelon.arrive.nelonshift.response.JwtResponse;
+import nelon.arrive.nelonshift.response.AuthResponse;
 import nelon.arrive.nelonshift.response.MessageResponse;
-import nelon.arrive.nelonshift.response.TokenRefreshResponse;
 
 public interface IAuthService {
-	JwtResponse login(LoginRequest request);
 	
-	TokenRefreshResponse refreshToken(TokenRefreshRequest request);
+	AuthResponse login(LoginRequest loginRequest, HttpServletResponse response);
+	
+	MessageResponse refreshToken(HttpServletRequest request, HttpServletResponse response);
 	
 	MessageResponse signup(SignupRequest request);
 	
-	MessageResponse logout(TokenRefreshRequest request);
+	MessageResponse logout(
+		HttpServletRequest request,
+		HttpServletResponse response
+	);
 	
 	User getCurrentUser();
 }
