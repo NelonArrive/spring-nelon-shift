@@ -26,17 +26,17 @@ import java.util.List;
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
-	
+
 	private final JwtAuthEntryPoint authEntryPoint;
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 	private final AuthTokenFilter authTokenFilter;
-	
+
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
 		return authConfig.getAuthenticationManager();
 	}
-	
+
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
@@ -52,6 +52,7 @@ public class SecurityConfig {
 					"/v3/api-docs/**",
 					"/swagger-ui.html"
 				).permitAll()
+					.requestMatchers("/api/projects/**").permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth2 -> oauth2
@@ -60,12 +61,12 @@ public class SecurityConfig {
 				)
 				.successHandler(oAuth2AuthenticationSuccessHandler)
 			);
-		
+
 		http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
-		
+
 		return http.build();
 	}
-	
+
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
@@ -73,10 +74,10 @@ public class SecurityConfig {
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
-		
+
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
-		
+
 		return source;
 	}
 }

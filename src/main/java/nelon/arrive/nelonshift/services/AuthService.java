@@ -53,26 +53,26 @@ public class AuthService implements IAuthService {
 	@Override
 	public AuthResponse login(LoginRequest loginRequest, HttpServletResponse response) {
 		log.info("Login attempt for email: {}", loginRequest.getEmail());
-		
+
 		Authentication authentication = authenticationManager.authenticate(
 			new UsernamePasswordAuthenticationToken(
 				loginRequest.getEmail(),
 				loginRequest.getPassword()
 			)
 		);
-		
+
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		
+
 		String accessToken = jwtUtils.generateAccessToken(authentication);
-		
+
 		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 		String refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
-		
+
 		cookieUtil.setAccessTokenCookie(response, accessToken);
 		cookieUtil.setRefreshTokenCookie(response, refreshToken);
-		
+
 		log.info("Login successful for user: {}", userDetails.getEmail());
-		
+
 		return new AuthResponse(
 			userDetails.getId(),
 			userDetails.getEmail(),
