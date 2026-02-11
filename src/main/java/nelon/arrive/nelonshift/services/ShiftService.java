@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -45,15 +44,15 @@ public class ShiftService implements IShiftService {
 	}
 	
 	@Override
-	public ShiftDto createShift(Long projectId, CreateShiftRequest request) {
+	public ShiftDto createShift(CreateShiftRequest request) {
 		validateShiftCreate(request);
 		
-		Project project = projectRepository.findById(projectId)
+		Project project = projectRepository.findById(request.getProjectId())
 			.orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 		
 		validateShiftDateAgainstProject(request.getDate(), project);
 		
-		if (shiftRepository.existsByProjectIdAndDate(projectId, request.getDate())) {
+		if (shiftRepository.existsByProjectIdAndDate(request.getProjectId(), request.getDate())) {
 			throw new AlreadyExistsException("Shift already exists for this project on date: " + request.getDate());
 		}
 		
@@ -66,11 +65,12 @@ public class ShiftService implements IShiftService {
 		shift.setOvertimeHours(request.getOvertimeHours());
 		shift.setOvertimePay(request.getOvertimePay());
 		shift.setPerDiem(request.getPerDiem());
+		shift.setCompensation(request.getCompensation());
 		shift.setProject(project);
-		
+
 		Shift savedShift = shiftRepository.save(shift);
-		log.info("Created shift with id: {} for project: {}", savedShift.getId(), projectId);
-		
+		log.info("Created shift with id: {} for project: {}", savedShift.getId(), request.getProjectId());
+
 		return shiftMapper.toDto(savedShift);
 	}
 	
@@ -96,7 +96,8 @@ public class ShiftService implements IShiftService {
 		shift.setOvertimeHours(shiftDetails.getOvertimeHours());
 		shift.setOvertimePay(shiftDetails.getOvertimePay());
 		shift.setPerDiem(shiftDetails.getPerDiem());
-		
+		shift.setCompensation(shiftDetails.getCompensation());
+
 		Shift updatedShift = shiftRepository.save(shift);
 		log.info("Updated shift with id: {}", id);
 		
@@ -200,10 +201,5 @@ public class ShiftService implements IShiftService {
 		if (project.getEndDate() != null && shiftDate.isAfter(project.getEndDate())) {
 			throw new BadRequestException("Shift date cannot be after project end date");
 		}
-	}
-	
-	@Override
-	public long calculateHoursBetween(LocalTime start, LocalTime end) {
-		return java.time.Duration.between(start, end).toHours();
 	}
 }

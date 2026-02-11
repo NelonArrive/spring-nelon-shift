@@ -30,4 +30,7 @@ public class UpdateShiftRequest {
 	
 	@DecimalMin(value = "0.0", message = "Per diem must be positive")
 	private BigDecimal perDiem;
+
+	@DecimalMin(value = "0.0", message = "Compensation must be positive")
+	private BigDecimal compensation;
 }

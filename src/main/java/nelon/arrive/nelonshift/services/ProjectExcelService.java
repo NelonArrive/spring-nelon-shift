@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -46,7 +47,7 @@ public class ProjectExcelService {
 
     // Заголовки колонок
     Row headerRow = sheet.createRow(rowNum++);
-    String[] headers = {"Дата", "Время", "Смена (часы)", "Переработки (часы)",
+    String[] headers = {"Дата", "Время", "Смена", "Переработки",
         "Суточные", "Компенсации", "ИТОГО"};
 
     for (int i = 0; i < headers.length; i++) {
@@ -57,7 +58,7 @@ public class ProjectExcelService {
 
     // Сортируем смены по дате
     List<Shift> shifts = project.getShifts().stream()
-        .sorted((s1, s2) -> s1.getDate().compareTo(s2.getDate()))
+        .sorted(Comparator.comparing(Shift::getDate))
         .toList();
 
     int dataStartRow = rowNum;
@@ -96,14 +97,14 @@ public class ProjectExcelService {
       }
       perDiemCell.setCellStyle(currencyStyle);
 
-      // Компенсации (базовая оплата + оплата переработок)
+      // Компенсации
       Cell compensationCell = row.createCell(5);
       BigDecimal compensation = BigDecimal.ZERO;
-      if (shift.getBasePay() != null) {
-        compensation = compensation.add(shift.getBasePay());
-      }
-      if (shift.getOvertimePay() != null) {
-        compensation = compensation.add(shift.getOvertimePay());
+      //shift.getCompensation() != null
+      if (false) {
+        // perDiemCell.setCellValue(shift.getCompensation().doubleValue());
+      } else {
+        perDiemCell.setCellValue("");
       }
       compensationCell.setCellValue(compensation.doubleValue());
       compensationCell.setCellStyle(currencyStyle);
@@ -226,11 +227,7 @@ public class ProjectExcelService {
     Font font = workbook.createFont();
     font.setBold(true);
     font.setFontHeightInPoints((short) 12);
-    font.setColor(IndexedColors.WHITE.getIndex());
     style.setFont(font);
-
-    style.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
     style.setAlignment(HorizontalAlignment.CENTER);
     style.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -302,6 +299,7 @@ public class ProjectExcelService {
     DataFormat format = workbook.createDataFormat();
     style.setDataFormat(format.getFormat("#,##0.00 ₽"));
 
+    // Серый фон для строки ИТОГО
     style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
     style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
@@ -318,14 +316,10 @@ public class ProjectExcelService {
     Font font = workbook.createFont();
     font.setBold(true);
     font.setFontHeightInPoints((short) 12);
-    font.setColor(IndexedColors.DARK_RED.getIndex());
     style.setFont(font);
 
     DataFormat format = workbook.createDataFormat();
     style.setDataFormat(format.getFormat("#,##0.00 ₽"));
-
-    style.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
-    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
     style.setAlignment(HorizontalAlignment.RIGHT);
     style.setVerticalAlignment(VerticalAlignment.CENTER);

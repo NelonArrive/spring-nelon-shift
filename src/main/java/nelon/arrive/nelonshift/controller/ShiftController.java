@@ -27,10 +27,9 @@ public class ShiftController {
 	
 	@PostMapping
 	public ResponseEntity<ShiftDto> createShift(
-		@RequestParam Long projectId,
 		@RequestBody CreateShiftRequest request
 	) {
-		return ResponseEntity.status(CREATED).body(shiftService.createShift(projectId, request));
+		return ResponseEntity.status(CREATED).body(shiftService.createShift(request));
 	}
 	
 	@PutMapping("/{id}")

@@ -45,7 +45,7 @@ public class Shift {
 	private Integer hours;
 	
 	@Column(name = "base_pay", precision = 10, scale = 2)
-	@DecimalMin(value = "0.0", inclusive = true, message = "Base pay must be positive")
+	@DecimalMin(value = "0.0", message = "Base pay must be positive")
 	private BigDecimal basePay;
 	
 	@Column(name = "overtime_hours")
@@ -53,12 +53,16 @@ public class Shift {
 	private Integer overtimeHours;
 	
 	@Column(name = "overtime_pay", precision = 10, scale = 2)
-	@DecimalMin(value = "0.0", inclusive = true, message = "Overtime pay must be positive")
+	@DecimalMin(value = "0.0", message = "Overtime pay must be positive")
 	private BigDecimal overtimePay;
 	
 	@Column(name = "per_diem", precision = 10, scale = 2)
-	@DecimalMin(value = "0.0", inclusive = true, message = "Per diem must be positive")
+	@DecimalMin(value = "0.0", message = "Per diem must be positive")
 	private BigDecimal perDiem;
+
+	@Column(nullable = false)
+	@DecimalMin(value = "0.0", message = "Compensation must be positive")
+	private BigDecimal compensation;
 	
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false, updatable = false)

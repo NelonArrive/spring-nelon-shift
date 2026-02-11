@@ -4,7 +4,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
@@ -18,7 +17,5 @@ public class ShiftDto {
 	private Integer overtimeHours;
 	private BigDecimal overtimePay;
 	private BigDecimal perDiem;
-	private BigDecimal totalPay;
-	private LocalDateTime createdAt;
-	private LocalDateTime updatedAt;
+	private BigDecimal compensation;
 }

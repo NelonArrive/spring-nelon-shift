@@ -7,13 +7,12 @@ import nelon.arrive.nelonshift.request.UpdateShiftRequest;
 import nelon.arrive.nelonshift.response.MessageResponse;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 public interface IShiftService {
 	List<ShiftDto> getShiftsByProjectId(Long projectId);
 	
-	ShiftDto createShift(Long projectId, CreateShiftRequest shift);
+	ShiftDto createShift(CreateShiftRequest shift);
 	
 	ShiftDto updateShift(Long id, UpdateShiftRequest shiftDetails);
 	
@@ -24,6 +23,4 @@ public interface IShiftService {
 	void validateShiftUpdate(UpdateShiftRequest request);
 	
 	void validateShiftDateAgainstProject(LocalDate shiftDate, Project project);
-	
-	long calculateHoursBetween(LocalTime start, LocalTime end);
 }
