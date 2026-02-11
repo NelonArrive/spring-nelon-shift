@@ -38,7 +38,6 @@ public class ShiftService implements IShiftService {
 		if (!projectRepository.existsById(projectId)) {
 			throw new ResourceNotFoundException("Project not found");
 		}
-		
 		List<Shift> shifts = shiftRepository.findByProjectId(projectId);
 		return shiftMapper.toDtoList(shifts);
 	}

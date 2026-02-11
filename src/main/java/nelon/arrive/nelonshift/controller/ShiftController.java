@@ -17,31 +17,29 @@ import static org.springframework.http.HttpStatus.CREATED;
 @RequestMapping("${api.prefix}/shifts")
 @RequiredArgsConstructor
 public class ShiftController {
-	
-	private final IShiftService shiftService;
-	
-	@GetMapping
-	public ResponseEntity<List<ShiftDto>> getShifts(@RequestParam() Long projectId) {
-		return ResponseEntity.ok(shiftService.getShiftsByProjectId(projectId));
-	}
-	
-	@PostMapping
-	public ResponseEntity<ShiftDto> createShift(
-		@RequestBody CreateShiftRequest request
-	) {
-		return ResponseEntity.status(CREATED).body(shiftService.createShift(request));
-	}
-	
-	@PutMapping("/{id}")
-	public ResponseEntity<ShiftDto> updateShift(
-		@PathVariable Long id,
-		@RequestBody UpdateShiftRequest request
-	) {
-		return ResponseEntity.ok(shiftService.updateShift(id, request));
-	}
-	
-	@DeleteMapping("/{id}")
-	public ResponseEntity<MessageResponse> deleteShift(@PathVariable Long id) {
-		return ResponseEntity.ok(shiftService.deleteShift(id));
-	}
+
+  private final IShiftService shiftService;
+
+  @GetMapping
+  public ResponseEntity<List<ShiftDto>> getShifts(@RequestParam() Long projectId) {
+    return ResponseEntity.ok(shiftService.getShiftsByProjectId(projectId));
+  }
+
+  @PostMapping
+  public ResponseEntity<ShiftDto> createShift(@RequestBody CreateShiftRequest request) {
+    return ResponseEntity.status(CREATED).body(shiftService.createShift(request));
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<ShiftDto> updateShift(
+      @PathVariable Long id,
+      @RequestBody UpdateShiftRequest request
+  ) {
+    return ResponseEntity.ok(shiftService.updateShift(id, request));
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<MessageResponse> deleteShift(@PathVariable Long id) {
+    return ResponseEntity.ok(shiftService.deleteShift(id));
+  }
 }

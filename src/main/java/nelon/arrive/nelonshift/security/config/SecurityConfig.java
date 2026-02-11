@@ -45,14 +45,14 @@ public class SecurityConfig {
 			.exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/auth/**").permitAll()
+				.requestMatchers("/api/v1/projects/**").permitAll()
+				.requestMatchers("/api/v1/auth/**").permitAll()
 				.requestMatchers("/oauth2/**").permitAll()
 				.requestMatchers(
 					"/swagger-ui/**",
 					"/v3/api-docs/**",
 					"/swagger-ui.html"
 				).permitAll()
-					.requestMatchers("/api/projects/**").permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth2 -> oauth2

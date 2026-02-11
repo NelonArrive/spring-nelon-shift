@@ -79,7 +79,8 @@ public class ProjectService implements IProjectService {
 		Page<Project> projectPage = projectRepository.findByFilters(
 			name, status, pageable
 		);
-		
+
+
 		Page<ProjectDto> projectDtoPage = projectPage.map(projectMapper::toDto);
 		return new PageResponse<>(projectDtoPage);
 	}
